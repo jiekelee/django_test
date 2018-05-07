@@ -1,0 +1,90 @@
+为终端设置代理
+安装polipo软件
+$ sudo apt-get install polipo
+1
+修改配置文件
+config文件是只读的，要想修改里面的数据，需要获得最高权限。
+
+$ cd /etc/polipo/
+$ sudo chmod 777 config # 为config文件申请最高权限
+$ vi /etc/polipo/config # 打开进行编辑
+1
+2
+3
+原文件中已经有了两句话，那么需要新加入3句话：
+
+socksParentProxy = "localhost:1080"
+socksProxyType = socks5
+logLevel=4
+1
+2
+3
+ps：这里建议修改文件后恢复其本来的权限，这算是个好习惯。
+
+关闭和启动polipo
+关闭软件，让配置生效，然后重启。
+
+$ sudo service polipo stop
+$ sudo service polipo start
+1
+2
+验证和使用
+安装完成后使用下面代码验证效果：
+
+$ curl ip.gs #查询你的IP地址和地理信息
+1
+$ http_proxy=http://localhost:8123 curl ip.gs
+1
+第二条语句得到的ip地址已经不是中国的了：“当前 IP：103.204.172.117 来自：日本大阪府大阪 starrydns.com”，说明安装成功。
+
+上面实验说明了想要为某个命令加上代理，就在前面使用：http_proxy=http://localhost:8123
+
+ps：8123是polipo的默认端口，如有需要，可以修改成其他有效端口。
+
+为当前会话设置全局代理
+难道要在每条联网命令前面都加上“hp”？当然不会，以下操作可以让当前终端窗口的所有联网命令都经过代理，一条命令，接管所有：
+
+$ export http_proxy=http://localhost:8123 # 当前终端使用代理
+$ unset http_proxy # 当前终端取消代理
+1
+2
+更为长久的代理设置
+如果我想Ubuntu终端一直处于代理状态，能不能做到呢？这也是可以的，以下设置可以让本机的终端一直拥有代理能力，设置好后就完全不用操心了，类似于写入环境变量的操作。
+
+方法很简单，将以下语句：
+
+export http_proxy=http://localhost:8123
+1
+加入.bashrc文件末尾，再执行source ~/.bashrc即可。
+
+现在有很多网站使用了更安全的https协议，因此，上一句若为export https_proxy=http://localhost:8123 则能对htttps协议起作用，但是这两句在bashrc中共存，貌似会出问题，这里博主使用别名“hps”来调用，确保不出错。那下文的例子就很好解释了。
+
+ps：实际使用中，某些命令貌似还是需要单独加hp，比如我用wget命令下载文件的时候，加上了别名hp ，下载速度才快得起来，例如：
+
+# 加上hp，才能达到1M/s以上的下载速度
+wget hp https://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.4.9/opencv-2.4.9.zip/download 
+
+
+
+
+
+
+
+为Git设置代理
+刚才的一大堆设置对git命令没有作用，为此我们要单独设置。
+
+事实上在git命令最后加参数可以实现代理：
+
+--config http.proxy=localhost:8123
+1
+但我们仍然觉得不方便，还是起个别名吧，比如就叫“gp”。
+
+在.bashrc文件末尾加入这一句：
+
+gp=" --config http.proxy=localhost:8123"
+1
+执行source ~/.bashrc
+
+以后，在git clone命令后面加入$gp就可以加快克隆速度，比如：
+
+$ git clone https://github.com/gmarik/Vundle.vim.git $gp
